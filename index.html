@@ -534,8 +534,7 @@
 
 <footer class="wrap">
   <div class="method-note">
-    <b>Metodología (resumen):</b> la línea de votación de cada propuesta es la posición (SÍ / NO / ABSTENCIÓN / BLANCO / no votó) que tomó la mayoría de las 61 curules de RC en esa votación puntual. El % de cohesión de bloque excluye los días en que la curul estuvo totalmente ausente. "Presente pero no votó" cuenta las veces que, estando en sesión, no se pronunció en una propuesta donde la mayoría de RC sí lo hizo. El (*) junto al número de curul indica que su % de Asistencia a sesiones con votación fue fijado en 100% por decisión de coordinación, independientemente del valor registrado.
-  </div>
+    <b>Metodología (resumen):</b> la línea de votación de cada propuesta es la posición (SÍ / NO / ABSTENCIÓN / BLANCO / no votó) que tomó la mayoría de las 61 curules de RC en esa votación puntual. El % de cohesión de bloque excluye los días en que la curul estuvo totalmente ausente. "Presente pero no votó" cuenta las veces que, estando en sesión, no se pronunció en una propuesta donde la mayoría de RC sí lo hizo.  </div>
   <div class="foot-grid" style="margin-top:24px;">
     <div>Elaboración: Coordinación de la Bancada Ciudadana &middot; Revolución Ciudadana</div>
     <div>Fuente: registro de votaciones de la Asamblea Nacional (14 may 2025 &ndash; 01 sep 2026), reportes internos de bancada, métricas de gestión comunicacional y registro de subcomisión de Articulación Política</div>
@@ -678,7 +677,6 @@ function renderRanking(){
       ${m.label}: <b>${(m.scale && d[metric]===0) ? 'Sin reporte' : fmt1(d[metric])+unit}</b><br>
       Cohesión de Bloque: ${fmt1(d.pct_disciplina)}% &middot; Asistencia: ${fmt1(d.pct_asistencia)}%<br>
       Ausencias: ${d.jornadas_ausente} días &middot; Aportes al día: ${d.al_dia_aportes}
-      ${d.asistencia_ajustada?'<br><i>*Asistencia fijada en 100% por decisión de coordinación</i>':''}
     `));
     row.addEventListener('mouseleave', hideTip);
   });
@@ -735,8 +733,7 @@ function renderScatter(){
       pt.setAttribute('r', 9);
       showTip(e, `<b>Curul ${d.curul}${d.asistencia_ajustada?'*':''} &middot; ${d.titular}</b>
         Cohesión de Bloque: <b>${fmt1(d.pct_disciplina)}%</b> &middot; Asistencia: <b>${fmt1(d.pct_asistencia)}%</b><br>
-        Ausencias: ${d.jornadas_ausente} días &middot; Presente sin voto: ${d.presente_no_voto}
-        ${d.asistencia_ajustada?'<br><i>*Asistencia fijada en 100% por decisión de coordinación</i>':''}`);
+        Ausencias: ${d.jornadas_ausente} días &middot; Presente sin voto: ${d.presente_no_voto}`);
     });
     pt.addEventListener('mouseleave', ()=>{ pt.setAttribute('r',6); hideTip(); });
   });
@@ -879,7 +876,7 @@ function renderTableBody(){
       } else if(c.key==='titular'){
         inner = `<span class="name-cell" title="${val}">${val}</span>`;
       } else if(c.key==='curul' && d.asistencia_ajustada){
-        inner = `<span class="tabular" title="% Asistencia fijado en 100% por decisión de coordinación">${val}*</span>`;
+        inner = `<span class="tabular">${val}*</span>`;
       } else {
         inner = `<span class="tabular">${val}</span>`;
       }
