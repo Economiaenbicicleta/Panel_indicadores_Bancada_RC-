@@ -427,7 +427,7 @@
       <div class="masthead-metrics">
         <div class="masthead-metrics-label">Cómo se calculan los indicadores</div>
         <div class="metric"><b>Asistencia a sesiones con votación:</b> &ge;1 voto (titular o suplente) por jornada &divide; total de jornadas &times; 100.</div>
-        <div class="metric"><b>Cohesión de Bloque:</b> votos que coinciden con la mayoría de RC &divide; votaciones consideradas (se excluyen ausencias) &times; 100.</div>
+        <div class="metric"><b>Cohesión con la votación de la Bancada:</b> votos que coinciden con la mayoría de RC &divide; votaciones consideradas (se excluyen ausencias) &times; 100.</div>
         <div class="metric"><b>Principalización:</b> reescalada techo 25%.</div>
       </div>
     </div>
@@ -463,8 +463,8 @@
       <label class="metric-picker">
         <span class="metric-picker-label">Ver ranking por</span>
         <select id="rank-metric">
-          <option value="pct_disciplina">Cohesión de Bloque</option>
-          <option value="pct_asistencia">Asistencia a sesiones con votación</option>
+          <option value="pct_disciplina">Cohesión con la votación de la Bancada</option>
+          <option value="pct_asistencia">Asistencia a sesiones de pleno con votación</option>
           <option value="pct_bancada">Asist. Reuniones Bancada</option>
           <option value="pct_juridicos">Asist. Reuniones Jurídicos</option>
           <option value="pct_principalizacion_reescalada">% Principalización de suplente (reescalada, techo 25%)</option>
@@ -543,6 +543,8 @@
 <footer class="wrap">
   <div class="method-note">
     <b>Metodología (resumen):</b> la línea de votación de cada propuesta es la posición (SÍ / NO / ABSTENCIÓN / BLANCO / no votó) que tomó la mayoría de las 61 curules de RC en esa votación puntual. El % de cohesión de bloque excluye los días en que la curul estuvo totalmente ausente. "Presente pero no votó" cuenta las veces que, estando en sesión, no se pronunció en una propuesta donde la mayoría de RC sí lo hizo.  </div>
+  <div class="method-note" style="margin-top:16px;">
+    <b>Sobre los aportes:</b> El artículo 359 del Código de la Democracia, dentro del capítulo de Financiamiento Privado, estipula que el patrimonio de los partidos y movimientos políticos podrá integrarse con las contribuciones periódicas de los afiliados o adherentes. Asimismo, el artículo 353 -en concordancia con el artículo 110 de la Constitución- complementa esta norma al establecer que las organizaciones políticas se financiarán de manera general con los aportes de sus afiliados y simpatizantes, regulando que dichos recursos deben gestionarse obligatoriamente a través del Sistema Financiero Nacional.</div>
   <div class="foot-grid" style="margin-top:24px;">
     <div>Elaboración: Coordinación de la Bancada Ciudadana &middot; Revolución Ciudadana</div>
     <div>Fuente: registro de votaciones de la Asamblea Nacional (14 may 2025 &ndash; 01 sep 2026), reportes internos de bancada, métricas de gestión comunicacional y registro de subcomisión de Articulación Política</div>
@@ -816,7 +818,7 @@ function renderCompliance(){
 const columns = [
   {key:'curul', label:'Curul', w:1, align:'left'},
   {key:'titular', label:'Titular', w:3, align:'left'},
-  {key:'pct_disciplina', label:'% Cohesión de Bloque', w:2, align:'left', bar:true, good:95, warn:85},
+  {key:'pct_disciplina', label:'% Cohesión con la votación de la Bancada', w:2, align:'left', bar:true, good:95, warn:85},
   {key:'pct_asistencia', label:'% Asistencia a sesiones con votación', w:2, align:'left', bar:true, good:95, warn:85},
   {key:'jornadas_ausente', label:'Ausencias', w:1, align:'right'},
   {key:'presente_no_voto', label:'Presente sin voto', w:1, align:'right'},
