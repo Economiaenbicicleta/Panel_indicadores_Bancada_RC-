@@ -468,7 +468,7 @@
           <option value="pct_asistencia">Asistencia a sesiones de pleno con votación</option>
           <option value="pct_bancada">Asistencia a reuniones de Bancada</option>
           <option value="pct_juridicos">Asistencia a reunión de jurídicos</option>
-          <option value="pct_principalizacion_reescalada">% Principalización de suplente (reescalada, techo 25%)</option>
+          <option value="pct_principalizacion_reescalada">% Principalización de suplente (techo 25%)</option>
           <option value="pct_firmas">% Participación en firmas documentos colectivos</option>
           <option value="comunicacion">Gestión comunicacional julio</option>
         </select>
@@ -568,18 +568,26 @@ DATA.forEach(d=>{
   }
 });
 
-// % Principalización de Suplente reescalada: el valor más alto real observado
-// entre las 61 curules pasa a valer 25% (techo de la escala); el resto se ajusta
-// proporcionalmente. Nuevo % = (pct_principalizacion ÷ máximo real) × 25.
-const PRINCIPALIZACION_MAX_REAL = Math.max(...DATA.map(d=>d.pct_principalizacion));
+// % Principalización de Suplente con techo de 25%: los valores reales por debajo
+// de 25% se muestran tal cual; los que llegan o superan 25% se topan exactamente
+// en 25% (el 25% funciona como umbral, no como reescala proporcional).
 DATA.forEach(d=>{
-  d.pct_principalizacion_reescalada = Math.round((d.pct_principalizacion / PRINCIPALIZACION_MAX_REAL) * 25 * 100) / 100;
+  d.principalizacion_topada = d.pct_principalizacion >= 25;
+  d.pct_principalizacion_reescalada = Math.min(d.pct_principalizacion, 25);
 });
 
 const fmt1 = n => (Math.round(n*10)/10).toLocaleString('es-EC',{minimumFractionDigits:1,maximumFractionDigits:1});
 const fmt0 = n => Math.round(n).toLocaleString('es-EC');
 const median = arr => { const s=[...arr].sort((a,b)=>a-b); const m=Math.floor(s.length/2); return s.length%2? s[m] : (s[m-1]+s[m])/2; };
 const avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
+
+function principalizacionColor(pctOriginal){
+  if(pctOriginal>=25) return 'var(--status-good)';
+  const t = Math.max(0, Math.min(1, pctOriginal/25));
+  const lightness = 82 - t*40;
+  const saturation = 55 + t*25;
+  return `hsl(28, ${saturation}%, ${lightness}%)`;
+}
 
 function statusTier(pct, good=95, warn=85){
   if(pct>=good) return 'good';
@@ -650,10 +658,9 @@ const metricMeta = {
     neutralCaption:'% de días asistidos en que el suplente ocupó la curul (sin connotación positiva ni negativa)',
     title:'Principalización de suplente por curul',
     desc:'% de días asistidos en que el suplente ocupó la curul.'},
-  pct_principalizacion_reescalada: {label:'% Principalización de suplente (reescalada, techo 25%)', neutral:true,
-    neutralCaption:'Misma medida reescalada: el valor más alto real equivale a 25% (techo); el resto es proporcional a ese techo',
-    title:'Principalización de suplente por curul (reescalada, techo 25%)',
-    desc:'el valor más alto real equivale a 25% (techo); el resto es proporcional a ese techo.'},
+  pct_principalizacion_reescalada: {label:'% Principalización de suplente (techo 25%)', custom:'principalizacion', axisMax:25,
+    title:'Principalización de suplente por curul (techo 25%)',
+    desc:'Valor real de principalización; los que llegan o superan el 25% se topan en ese umbral.'},
   pct_firmas: {label:'% Participación en Firmas', neutral:true,
     neutralCaption:'% de documentos colectivos de la bancada firmados por la curul (del 29 ago 2025 al 04 sep 2026)',
     title:'Participación en firmas de documentos colectivos por curul',
@@ -666,6 +673,14 @@ const metricMeta = {
 
 function renderRankLegend(metric){
   const m = metricMeta[metric];
+  if(m.custom==='principalizacion'){
+    document.getElementById('rank-legend').innerHTML = `
+      <span><i style="background:var(--status-good)"></i>&ge; 25% (umbral alcanzado, topado en 25%)</span>
+      <span><i style="background:linear-gradient(90deg, hsl(28,55%,82%), hsl(28,80%,42%));"></i>&lt; 25% (color según el valor real)</span>
+      <span style="margin-left:auto;"><i style="background:var(--brand-red)"></i>Mediana de la bancada</span>
+    `;
+    return;
+  }
   if(m.neutral){
     document.getElementById('rank-legend').innerHTML = `
       <span><i style="background:var(--brand-blue)"></i>${m.neutralCaption}</span>
@@ -689,12 +704,13 @@ function renderRanking(){
   renderRankLegend(metric);
   const sorted = [...DATA].sort((a,b)=>b[metric]-a[metric]);
   const med = median(DATA.map(d=>d[metric]));
-  const max = m.scale ? m.scale : Math.max(...DATA.map(d=>d[metric]), 100);
+  const max = m.axisMax ? m.axisMax : (m.scale ? m.scale : Math.max(...DATA.map(d=>d[metric]), 100));
   const unit = m.scale ? '/'+m.scale : '%';
   const list = document.getElementById('rank-list');
   list.innerHTML = sorted.map((d,i) => {
     const tier = m.neutral ? null : statusTier(d[metric], m.good, m.warn);
-    const barColor = m.neutral ? 'var(--brand-blue)' : `var(--status-${tier})`;
+    const barColor = m.custom==='principalizacion' ? principalizacionColor(d.pct_principalizacion)
+      : m.neutral ? 'var(--brand-blue)' : `var(--status-${tier})`;
     const wpct = (d[metric]/max*100).toFixed(2);
     const medpct = (med/max*100).toFixed(2);
     return `<div class="rank-row" data-name="${d.titular.toLowerCase()}" data-curul="${d.curul}">
