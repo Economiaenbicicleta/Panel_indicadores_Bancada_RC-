@@ -177,10 +177,10 @@
     display:grid;
     grid-template-columns: auto minmax(0,285px) minmax(0,195px) minmax(0,160px) minmax(0,150px);
     align-items:center; gap:14px;
-    max-width:980px; margin:0 auto;
+    max-width:1100px; margin:0 auto;
     padding:11px 28px;
   }
-  .seal{ width:96px; height:auto; display:block; background:#fff; border-radius:var(--radius-md); padding:6px 8px; box-shadow:var(--shadow-sm); border:1px solid var(--border); }
+  .seal{ width:225px; height:auto; display:block; background:#fff; border-radius:var(--radius-md); padding:6px 8px; box-shadow:var(--shadow-sm); border:1px solid var(--border); }
   .masthead-title-block{ min-width:0; }
   .masthead-desc{ min-width:0; border-left:1px solid var(--border); padding-left:14px; }
   .masthead-title{ font-size:26px; font-weight:700; margin-top:1px; letter-spacing:-0.02em; color:var(--brand-blue); line-height:1.1; }
@@ -211,13 +211,13 @@
   .masthead-metrics div.metric{ font-size:10.5px; line-height:1.4; color:var(--ink-secondary); }
   .masthead-metrics div.metric b{ color:var(--ink); font-weight:700; }
   @media (max-width:1180px){
-    .masthead-metrics{ display:none; }
     .masthead-inner{ grid-template-columns: auto minmax(0,220px) minmax(0,240px) minmax(0,200px); max-width:900px; }
+    .masthead-metrics{ grid-column:1 / -1; border-left:none; border-top:1px solid var(--border); padding-left:0; padding-top:10px; margin-top:4px; }
   }
   @media (max-width:820px){
     .masthead-meta{ display:none; }
     .masthead-inner{ grid-template-columns: auto minmax(0,1fr) minmax(0,1fr); max-width:640px; padding:9px 28px; gap:12px; }
-    .seal{ width:90px; }
+    .seal{ width:110px; }
     .masthead-title{ font-size:21px; }
     .masthead-sub{ font-size:11.5px; }
     .masthead-coordinator{ font-size:13px; margin-top:5px; }
@@ -225,7 +225,7 @@
   @media (max-width:560px){
     .masthead-inner{ grid-template-columns: auto minmax(0,1fr); max-width:100%; padding:7px 16px; gap:9px; }
     .masthead-desc{ display:none; }
-    .seal{ width:60px; padding:4px 5px; }
+    .seal{ width:80px; padding:4px 5px; }
     .masthead-title{ font-size:17px; }
     .eyebrow{ font-size:10px; }
     .masthead-sub, .masthead-credit, .masthead-coordinator{ display:none; }
@@ -452,8 +452,8 @@
   <div class="section-head">
     <div>
       <div class="eyebrow">Ranking</div>
-      <h2>Cohesión de bloque por curul</h2>
-      <div class="section-desc">% de votaciones en que cada curul coincidió con la línea de votación mayoritaria de RC. La línea roja marca la mediana de la bancada en la métrica elegida.</div>
+      <h2 id="ranking-title">Cohesión de bloque por curul</h2>
+      <div class="section-desc" id="ranking-desc">% de votaciones en que cada curul coincidió con la línea de votación mayoritaria de RC. La línea roja marca la mediana de la bancada.</div>
     </div>
     <div class="controls">
       <div class="search">
@@ -465,8 +465,8 @@
         <select id="rank-metric">
           <option value="pct_disciplina">Cohesión con la votación de la Bancada</option>
           <option value="pct_asistencia">Asistencia a sesiones de pleno con votación</option>
-          <option value="pct_bancada">Asist. Reuniones Bancada</option>
-          <option value="pct_juridicos">Asist. Reuniones Jurídicos</option>
+          <option value="pct_bancada">Asistencia a reuniones de Bancada</option>
+          <option value="pct_juridicos">Asistencia a reunión de jurídicos</option>
           <option value="pct_principalizacion_reescalada">% Principalización de suplente (reescalada, techo 25%)</option>
           <option value="pct_firmas">% Participación en firmas documentos colectivos</option>
           <option value="comunicacion">Gestión comunicacional julio</option>
@@ -633,18 +633,34 @@ function renderKPIs(){
    RANKING CHART
 ============================================================ */
 const metricMeta = {
-  pct_disciplina:  {label:'% Cohesión de Bloque', good:95, warn:85},
-  pct_asistencia:  {label:'% Asistencia a sesiones con votación', good:95, warn:85},
-  pct_bancada:     {label:'% Asist. Reuniones Bancada', good:70, warn:40},
-  pct_juridicos:   {label:'% Asist. Reuniones Jurídicos', good:70, warn:40},
+  pct_disciplina:  {label:'% Cohesión de Bloque', good:95, warn:85,
+    title:'Cohesión con la votación de la Bancada por curul',
+    desc:'% de votaciones en que cada curul coincidió con la línea de votación mayoritaria de RC.'},
+  pct_asistencia:  {label:'% Asistencia a sesiones con votación', good:95, warn:85,
+    title:'Asistencia a sesiones de pleno por curul',
+    desc:'% de jornadas con al menos un voto (titular o suplente) registrado, sobre el total de jornadas con votación.'},
+  pct_bancada:     {label:'% Asist. Reuniones Bancada', good:70, warn:40,
+    title:'Asistencia a reuniones de bancada por curul',
+    desc:'% de reuniones de bancada a las que asistió la curul, sobre el total de reuniones registradas.'},
+  pct_juridicos:   {label:'% Asist. Reuniones Jurídicos', good:70, warn:40,
+    title:'Asistencia a reuniones de jurídicos por curul',
+    desc:'% de reuniones de la comisión de jurídicos a las que asistió la curul, entre el 14 de mayo de 2025 al 26 de agosto de 2026.'},
   pct_principalizacion: {label:'% Principalización de suplente a sesiones con votación', neutral:true,
-    neutralCaption:'% de días asistidos en que el suplente ocupó la curul (sin connotación positiva ni negativa)'},
+    neutralCaption:'% de días asistidos en que el suplente ocupó la curul (sin connotación positiva ni negativa)',
+    title:'Principalización de suplente por curul',
+    desc:'% de días asistidos en que el suplente ocupó la curul.'},
   pct_principalizacion_reescalada: {label:'% Principalización de suplente (reescalada, techo 25%)', neutral:true,
-    neutralCaption:'Misma medida reescalada: el valor más alto real equivale a 25% (techo); el resto es proporcional a ese techo'},
+    neutralCaption:'Misma medida reescalada: el valor más alto real equivale a 25% (techo); el resto es proporcional a ese techo',
+    title:'Principalización de suplente por curul (reescalada, techo 25%)',
+    desc:'el valor más alto real equivale a 25% (techo); el resto es proporcional a ese techo.'},
   pct_firmas: {label:'% Participación en Firmas', neutral:true,
-    neutralCaption:'% de documentos colectivos de la bancada firmados por la curul (del 29 ago 2025 al 04 sep 2026)'},
+    neutralCaption:'% de documentos colectivos de la bancada firmados por la curul (del 29 ago 2025 al 04 sep 2026)',
+    title:'Participación en firmas de documentos colectivos por curul',
+    desc:'% de documentos colectivos de la bancada firmados por la curul (del 29 ago 2025 al 04 sep 2026).'},
   comunicacion: {label:'Gestión Comunicacional', neutral:true, scale:10,
-    neutralCaption:'Índice de gestión comunicacional (entrevistas, hashtag y cuentas activas) sobre 10'},
+    neutralCaption:'Índice de gestión comunicacional (entrevistas, hashtag y cuentas activas) sobre 10',
+    title:'Gestión comunicacional por curul',
+    desc:'Índice de gestión comunicacional (entrevistas, hashtag y cuentas activas) sobre 10.'},
 };
 
 function renderRankLegend(metric){
@@ -667,6 +683,8 @@ function renderRankLegend(metric){
 function renderRanking(){
   const metric = document.getElementById('rank-metric').value;
   const m = metricMeta[metric];
+  document.getElementById('ranking-title').textContent = m.title;
+  document.getElementById('ranking-desc').textContent = m.desc + ' La línea roja marca la mediana de la bancada.';
   renderRankLegend(metric);
   const sorted = [...DATA].sort((a,b)=>b[metric]-a[metric]);
   const med = median(DATA.map(d=>d[metric]));
