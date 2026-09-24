@@ -341,6 +341,11 @@
   .rank-head{ cursor:default; }
   .rank-head:hover{ background:none; }
   .rank-head div{ font-size:11.5px; font-weight:800; color:var(--ink-muted); text-transform:uppercase; letter-spacing:.04em; }
+  .rank-na{ margin-top:18px; border:1px solid var(--border-strong); border-radius:var(--radius-md); background:var(--surface-2); padding:12px 16px; }
+  .rank-na-title{ font-size:14px; font-weight:800; color:var(--ink-secondary); margin-bottom:8px; }
+  .rank-na-list{ display:flex; flex-direction:column; gap:4px; }
+  .rank-na-item{ font-size:14px; color:var(--ink); font-weight:500; }
+  .rank-na-item b{ font-weight:800; color:var(--brand-blue); font-size:12.5px; margin-right:6px; }
   .rank-median{ position:absolute; top:-5px; bottom:-5px; width:2px; background:var(--brand-red); opacity:.75; }
 
   /* ---- two-col ---- */
@@ -590,6 +595,14 @@ DATA.forEach(d=>{
 // curul 63 también tiene bancada (22 de 57) y jurídicos (23 de 47) desde el 10-sep-2025, según
 // las observaciones del propio archivo de origen. El resto (firmas/comunicación, y bancada/
 // jurídicos de 9, 27 y 25) no tiene desglose por fecha y conserva el valor del periodo completo.
+// Curules que NO aplican en el indicador de Asistencia a sesiones de Pleno (ranking y promedio
+// de la bancada) por persecución y/o suspensión (criterio de coordinación, 2026-09-24). Solo se
+// excluyen del ranking de asistencia y del KPI "Asistencia promedio": se listan en un recuadro
+// aparte, sin % ni nota. Sus datos reales (pct_asistencia, jornadas_*) se conservan intactos en
+// DATA para uso futuro, y el resto de indicadores/tabla/dispersión no cambia.
+const ASISTENCIA_NO_APLICA_CURULES = [17,18,21,29,30,49,60];
+const asisAplica = d => !ASISTENCIA_NO_APLICA_CURULES.includes(d.curul);
+
 const NOTA_ESPECIAL_CURULES = [63, 9, 27, 25];
 DATA.forEach(d=>{
   if(NOTA_ESPECIAL_CURULES.includes(d.curul)){
@@ -651,13 +664,14 @@ function hideTip(){ tip.classList.remove('show'); }
 function renderKPIs(){
   const n = DATA.length;
   const avgDisc = avg(DATA.map(d=>d.pct_disciplina));
-  const avgAsis = avg(DATA.map(d=>d.pct_asistencia));
+  const asisData = DATA.filter(asisAplica);
+  const avgAsis = avg(asisData.map(d=>d.pct_asistencia));
 
   const cards = [
     {hero:true, label:'Cohesión de bloque promedio', value: fmt1(avgDisc)+'%',
       note: `Sobre ${n} curules &middot; mediana ${fmt1(median(DATA.map(d=>d.pct_disciplina)))}%`},
     {hero:true, label:'Asistencia promedio', value: fmt1(avgAsis)+'%',
-      note: `Sobre ${n} curules &middot; mediana ${fmt1(median(DATA.map(d=>d.pct_asistencia)))}%`},
+      note: `Sobre ${asisData.length} curules &middot; mediana ${fmt1(median(asisData.map(d=>d.pct_asistencia)))}%`},
   ];
   const grid = document.getElementById('kpi-grid');
   grid.innerHTML = cards.map(c => `
@@ -751,9 +765,10 @@ function renderRanking(){
   document.getElementById('ranking-title').textContent = m.title;
   document.getElementById('ranking-desc').textContent = m.desc + ' La línea roja marca la mediana de la bancada.';
   renderRankLegend(metric);
-  const sorted = [...DATA].sort((a,b)=>b[metric]-a[metric]);
-  const med = median(DATA.map(d=>d[metric]));
-  const max = m.axisMax ? m.axisMax : (m.scale ? m.scale : Math.max(...DATA.map(d=>d[metric]), 100));
+  const rankData = metric==='pct_asistencia' ? DATA.filter(asisAplica) : DATA;
+  const sorted = [...rankData].sort((a,b)=>b[metric]-a[metric]);
+  const med = median(rankData.map(d=>d[metric]));
+  const max = m.axisMax ? m.axisMax : (m.scale ? m.scale : Math.max(...rankData.map(d=>d[metric]), 100));
   const unit = m.scale ? '/'+m.scale : '%';
   const list = document.getElementById('rank-list');
   list.classList.toggle('with-tag', !!m.tag);
@@ -774,7 +789,11 @@ function renderRanking(){
       <div class="rank-val tabular" style="color:${barColor}; white-space:nowrap;">${(m.scale && d[metric]===0) ? 'Sin reporte' : fmt1(d[metric])+unit}</div>
       ${m.tag ? `<div class="rank-tag"><span class="chip ${d[m.tag]==='SI'?'good':'critical'}">${d[m.tag]}</span></div>` : ''}
     </div>`;
-  }).join('');
+  }).join('') + (metric==='pct_asistencia' ? `<div class="rank-na">
+      <div class="rank-na-title">No aplica por persecución y/o suspensión</div>
+      <div class="rank-na-list">${DATA.filter(d=>!asisAplica(d)).sort((a,b)=>a.curul-b.curul)
+        .map(d=>`<div class="rank-na-item" data-name="${d.titular.toLowerCase()}" data-curul="${d.curul}"><b>C${d.curul}</b>${d.titular}</div>`).join('')}</div>
+    </div>` : '');
 
   if(m.noTip) return;
   list.querySelectorAll('.rank-row[data-curul]').forEach(row=>{
@@ -794,7 +813,7 @@ function renderRanking(){
 document.getElementById('rank-metric').addEventListener('change', renderRanking);
 document.getElementById('rank-search').addEventListener('input', e=>{
   const q = e.target.value.trim().toLowerCase();
-  document.querySelectorAll('#rank-list .rank-row').forEach(row=>{
+  document.querySelectorAll('#rank-list .rank-row, #rank-list .rank-na-item').forEach(row=>{
     const match = !q || row.dataset.name.includes(q) || row.dataset.curul===q;
     row.classList.toggle('rank-hidden', !match);
   });
